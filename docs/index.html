@@ -1,165 +1,630 @@
 <!DOCTYPE html>
-<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<html lang="zh-CN">
 <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
-    
-    <link rel="icon" href="https://avatars.githubusercontent.com/u/97750282?v=4"><script>
-        let theme = localStorage.getItem("meek_theme") || "light";
-        document.documentElement.setAttribute("data-color-mode", theme);
-    </script>
-<meta name="description" content="鲸屿的个人博客">
-<meta property="og:title" content="鲸屿">
-<meta property="og:description" content="鲸屿的个人博客">
-<meta property="og:type" content="blog">
-<meta property="og:url" content="https://xstar-hb.github.io/Xstar.github.io">
-<meta property="og:image" content="https://avatars.githubusercontent.com/u/97750282?v=4">
-<title>鲸屿</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP Top 10 漏洞详解（2021版）</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --text-main: #1d1d1f;
+            --text-light: #86868b;
+            --accent-color: #0066cc;
+            --card-bg: #ffffff;
+            --border-color: #d2d2d7;
+            --code-bg: #1e1e1e;
+            --code-text: #2ee64d;
+            --toc-hover: rgba(0, 0, 0, 0.05);
+        }
 
-</head>
-<style>
-body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
-#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
-#footer {margin-top:64px; text-align: center;font-size: small;}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
 
-</style>
+        html {
+            /* 开启纯 CSS 平滑滚动 */
+            scroll-behavior: smooth;
+        }
 
-<style>
-.avatar {transition: 0.8s;width:64px;height:64px;object-fit: cover;}
-.avatar:hover{transform: scale(1.15) rotate(360deg);}
-#header h1 a{color:inherit;text-decoration:none;vertical-align: bottom;font-size:40px;font-family:Monaco;margin-left:8px;}
-.title-right{display:flex;margin:auto 0 0 auto;}
-.title-right button{margin-right:8px;padding:16px;}
-.title-right .circle{padding: 14px 16px;}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
 
-.SideNav{min-width: 360px;}
-.SideNav-icon{margin-right: 16px}
-.SideNav-item .Label{color: #fff;margin-left:4px;}
-.d-flex{min-width:0;}
-.listTitle{overflow:hidden;white-space:nowrap;text-overflow: ellipsis;max-width: 100%;}
-.listLabels{white-space:nowrap;display:flex;}
-.listLabels object{max-height:16px;max-width:24px;}
+        /* 页面整体布局 */
+        .page-wrapper {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            align-items: flex-start;
+            gap: 40px;
+        }
 
-@media (max-width: 600px) {
-    body {padding: 8px;}
-    .avatar {width:40px;height:40px;}
-    .blogTitle{display:none;}
-    #buttonRSS{display:none;}
-    .LabelTime{display:none;}
-}
-</style>
+        /* --- 左侧悬浮目录样式 --- */
+        .toc-sidebar {
+            position: sticky;
+            top: 60px; /* 距离顶部的吸附距离 */
+            width: 260px;
+            flex-shrink: 0;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding-right: 15px;
+        }
 
+        /* 隐藏滚动条但保留功能 */
+        .toc-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .toc-sidebar::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 4px;
+        }
+        .toc-sidebar:hover::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+        }
 
+        .toc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-left: 12px;
+        }
 
-<body>
-    <div id="header">
-<h1>
-    <img src="https://avatars.githubusercontent.com/u/97750282?v=4" class="avatar circle" id="avatarImg" alt="avatar"><a class="blogTitle">鲸屿</a></h1>
-<div class="title-right">
-    <a href="https://xstar-hb.github.io/Xstar.github.io/tag.html" id="buttonSearch" class="btn btn-invisible circle" title="搜索">
-        <svg class="octicon" width="16" height="16" >
-            <path id="pathSearch" fill-rule="evenodd"></path>
-        </svg>
-    </a>
-    
-    
-    <a href="https://xstar-hb.github.io/Xstar.github.io/rss.xml" target="_blank" id="buttonRSS" class="btn btn-invisible circle" title="RSS">
-        <svg class="octicon" width="16" height="16" >
-            <path id="pathRSS" fill-rule="evenodd"></path>
-        </svg>
-    </a>
-    <a class="btn btn-invisible circle" onclick="modeSwitch()" title="切换主题">
-        <svg class="octicon" width="16" height="16" >
-            <path id="themeSwitch" fill-rule="evenodd"></path>
-        </svg>
-    </a>
-</div>
-</div>
-    <div id="content">
-<div style="margin-bottom: 16px;">鲸屿的个人博客</div>
-<nav class="SideNav border">
-<a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/xiao-xiao-xi-LOVE-da-da-yang.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">小小席LOVE大大羊</span>
-    </div>
-    <div class="listLabels">
+        .toc-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc-link {
+            display: block;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-link:hover {
+            background-color: var(--toc-hover);
+            color: var(--text-main);
+        }
+
+        .toc-link.active {
+            background-color: #fff;
+            color: var(--accent-color);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        /* --- 右侧主内容区样式 --- */
+        .main-content {
+            flex-grow: 1;
+            max-width: 860px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        article {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 50px 60px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            margin-bottom: 40px;
+            /* 修正锚点跳转时的顶部遮挡问题 */
+            scroll-margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            article {
+                padding: 30px 20px;
+            }
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-top: 50px;
+            margin-bottom: 24px;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+        }
+
+        h2:first-child {
+            margin-top: 0;
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        p {
+            font-size: 17px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        li {
+            font-size: 17px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .highlight-box {
+            background-color: rgba(0, 102, 204, 0.05);
+            border-left: 4px solid var(--accent-color);
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: "SF Mono", ui-monospace, monospace;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: "SF Mono", ui-monospace, monospace;
+            background-color: rgba(0,0,0,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #e30000;
+        }
         
-        <span class="Label LabelName" style="background-color:#0075ca"><object><a style="color:#fff" href="tag.html#documentation">documentation</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-06-20</span>
-    </div>
-</a>
-</nav>
-</div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://xstar-hb.github.io/Xstar.github.io">鲸屿</a></div>
-<div id="footer2">
-    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 15px;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 响应式调整：平板及手机端布局 */
+        @media (max-width: 1024px) {
+            .page-wrapper {
+                flex-direction: column;
+                padding: 30px 20px;
+            }
+            .toc-sidebar {
+                position: static;
+                width: 100%;
+                max-height: 300px;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            }
+            .main-content {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+    <aside class="toc-sidebar">
+        <div class="toc-title">目录内容</div>
+        <ul class="toc-list">
+            <li><a href="#intro" class="toc-link">前言 & 总览</a></li>
+            <li><a href="#a01" class="toc-link">A01: 失效的访问控制</a></li>
+            <li><a href="#a02" class="toc-link">A02: 加密机制失效</a></li>
+            <li><a href="#a03" class="toc-link">A03: 注入漏洞</a></li>
+            <li><a href="#a04" class="toc-link">A04: 不安全的设计</a></li>
+            <li><a href="#a05" class="toc-link">A05: 安全配置错误</a></li>
+            <li><a href="#a06" class="toc-link">A06: 存在漏洞的组件</a></li>
+            <li><a href="#a07" class="toc-link">A07: 身份认证失效</a></li>
+            <li><a href="#a08" class="toc-link">A08: 软件数据完整性失效</a></li>
+            <li><a href="#a09" class="toc-link">A09: 日志与监控失效</a></li>
+            <li><a href="#a10" class="toc-link">A10: 服务端请求伪造</a></li>
+            <li><a href="#conclusion" class="toc-link">真正危险的不是“漏洞”</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1>OWASP Top 10 漏洞详解</h1>
+            <p class="subtitle">2021版 · 深度解析与防御指南</p>
+        </header>
+
+        <article id="intro">
+            <h2>前言</h2>
+            <p>OWASP（Open Web Application Security Project）发布的 Top 10 是全球 Web 安全领域最具影响力的漏洞风险清单之一。</p>
+            <p>它不是“10个漏洞名字”的简单罗列，而是：</p>
+            <ul>
+                <li>Web 应用最常见的攻击面总结</li>
+                <li>企业安全建设的最低基线</li>
+                <li>渗透测试、代码审计、SDL、安全开发的重要参考</li>
+                <li>面试、安全岗、CTF、攻防演练高频知识点</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <p>很多人学习漏洞时有个致命问题：只会“打漏洞”，不会理解漏洞为什么会存在。</p>
+            </div>
+            
+            <p>真正重要的是理解：</p>
+            <ul>
+                <li>漏洞形成条件</li>
+                <li>系统设计缺陷</li>
+                <li>攻击链组合方式</li>
+                <li>防御边界</li>
+                <li>开发中的错误思维</li>
+            </ul>
+
+            <h2>Top 10 漏洞总览</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>漏洞名称</th>
+                        <th>危险等级</th>
+                        <th>核心问题</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A01</td><td>Broken Access Control</td><td>极高</td><td>权限控制失效</td></tr>
+                    <tr><td>A02</td><td>Cryptographic Failures</td><td>极高</td><td>加密使用错误</td></tr>
+                    <tr><td>A03</td><td>Injection</td><td>极高</td><td>用户输入被解释执行</td></tr>
+                    <tr><td>A04</td><td>Insecure Design</td><td>高</td><td>架构设计存在缺陷</td></tr>
+                    <tr><td>A05</td><td>Security Misconfiguration</td><td>高</td><td>配置错误</td></tr>
+                    <tr><td>A06</td><td>Vulnerable Components</td><td>高</td><td>使用存在漏洞的组件</td></tr>
+                    <tr><td>A07</td><td>Identification and Authentication Failures</td><td>高</td><td>身份认证缺陷</td></tr>
+                    <tr><td>A08</td><td>Software and Data Integrity Failures</td><td>高</td><td>软件完整性问题</td></tr>
+                    <tr><td>A09</td><td>Logging and Monitoring Failures</td><td>中高</td><td>日志与监控缺失</td></tr>
+                    <tr><td>A10</td><td>SSRF</td><td>高</td><td>服务端请求伪造</td></tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article id="a01">
+            <h2>A01 Broken Access Control（访问控制失效）</h2>
+            <h3>漏洞本质</h3>
+            <p>系统没有正确限制“谁能访问什么”。这是目前最危险、最常见的漏洞类型之一。</p>
+            <p>本质问题：<strong>系统默认相信用户。</strong> 攻击者不需要破解密码，只需要修改 ID、越权访问接口、猜测资源路径或伪造请求，即可访问不属于自己的数据。</p>
+
+            <h3>常见类型</h3>
+            <p><strong>1. 水平越权</strong><br>用户A访问用户B的数据。例如：<code>/user/info?id=1001</code> 修改为 <code>/user/info?id=1002</code>，如果返回别人数据，就是水平越权。</p>
+            
+            <p><strong>2. 垂直越权</strong><br>普通用户获取管理员权限。例如：调用 <code>/admin/deleteUser</code>，后台未验证管理员身份。</p>
+
+            <p><strong>3. 接口未鉴权</strong><br>前端隐藏了按钮，但后端接口仍可直接调用。很多开发误以为：“前端看不见 = 安全”。这是典型错误，安全必须由服务端控制。</p>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>必须遵循：默认拒绝。</strong>系统默认不允许访问，而不是“默认允许，再做限制”。</li>
+                <li><strong>服务端统一鉴权。</strong>不要依赖前端按钮隐藏、JS 判断或页面跳转限制。所有接口都必须校验身份、权限和资源归属。</li>
+                <li><strong>RBAC 权限模型。</strong>推荐：用户 -> 角色 -> 权限。而不是直接给用户权限。</li>
+            </ul>
+        </article>
+
+        <article id="a02">
+            <h2>A02 Cryptographic Failures（加密机制失效）</h2>
+            <h3>漏洞本质</h3>
+            <p>不是“没加密”，而是：“错误地使用了加密”。</p>
+            <p>很多开发会使用弱算法、明文存储密码、自己设计加密、使用固定 IV 或传输不走 HTTPS。这会导致数据即使“看起来加密了”，也能被恢复。</p>
+
+            <h3>常见问题</h3>
+            <p><strong>1. 明文存储密码</strong></p>
+<pre><code>password = 123456</code></pre>
+            <p>数据库一旦泄露，全站沦陷。</p>
+
+            <p><strong>2. 使用 MD5/SHA1</strong><br>很多人仍然认为 MD5 = 安全。这是严重错误，MD5 已被彩虹表、GPU 暴力破解。</p>
+
+            <p><strong>3. 自己设计加密算法</strong><br>安全领域有个经典结论：不要自己发明密码学。因为 99% 的自定义加密都存在致命缺陷。</p>
+
+            <h3>正确方案</h3>
+            <ul>
+                <li><strong>密码存储：</strong>使用 bcrypt、scrypt、Argon2。</li>
+                <li><strong>全站 HTTPS：</strong>不仅登录页，所有页面都必须 HTTPS。</li>
+                <li><strong>密钥隔离：</strong>不要把 key、数据库密码、JWT 密钥写进代码仓库。</li>
+            </ul>
+        </article>
+
+        <article id="a03">
+            <h2>A03 Injection（注入漏洞）</h2>
+            <h3>漏洞本质</h3>
+            <p>用户输入被当成代码执行。这是 Web 安全最经典的漏洞类型。核心原因：数据和代码没有分离。</p>
+
+            <h3>常见注入类型</h3>
+            <ul>
+                <li><strong>SQL 注入：</strong>SQL 被拼接执行</li>
+                <li><strong>XSS：</strong>JS 被浏览器执行</li>
+                <li><strong>命令注入：</strong>系统命令被执行</li>
+                <li><strong>LDAP 注入：</strong>LDAP 查询被污染</li>
+            </ul>
+
+            <h3>经典示例</h3>
+            <p><strong>SQL 注入错误代码：</strong></p>
+<pre><code>SELECT * FROM users WHERE username='admin' AND password='123456'</code></pre>
+            <p>攻击者输入：<code>' OR 1=1 --</code> 可能直接绕过登录。</p>
+
+            <p><strong>命令注入错误示例：</strong><code>ping + user_input</code>。攻击者输入：<code>127.0.0.1 && rm -rf /</code>，后果极其严重。</p>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>永远不要字符串拼接 SQL。</strong>必须使用 PreparedStatement、参数化查询或 ORM。</li>
+                <li><strong>输出编码。</strong>针对 HTML、JS、URL 分别转义。</li>
+                <li><strong>输入白名单。</strong>不是过滤危险字符，而是只允许合法输入。这两者差别巨大。</li>
+            </ul>
+        </article>
+
+        <article id="a04">
+            <h2>A04 Insecure Design（不安全设计）</h2>
+            <h3>漏洞本质</h3>
+            <p>不是代码写错，而是系统从设计阶段就存在安全缺陷。很多团队把安全当“补丁”。真正成熟的团队：在架构阶段就考虑攻击路径。</p>
+
+            <h3>典型问题</h3>
+            <ul>
+                <li><strong>没有限流：</strong>导致暴力破解、短信轰炸、验证码爆破。</li>
+                <li><strong>密码找回逻辑弱：</strong>例如只验证手机号后4位。</li>
+                <li><strong>多租户隔离失败：</strong>一个客户读取另一个客户数据。</li>
+            </ul>
+
+            <h3>核心思想与推荐方法</h3>
+            <p>安全不是“上线前修几个洞”，而是系统设计阶段就进行威胁建模。</p>
+            <p><strong>微软经典 STRIDE 威胁建模方法：</strong></p>
+            <table>
+                <thead><tr><th>类型</th><th>含义</th></tr></thead>
+                <tbody>
+                    <tr><td>S (Spoofing)</td><td>身份伪造</td></tr>
+                    <tr><td>T (Tampering)</td><td>数据篡改</td></tr>
+                    <tr><td>R (Repudiation)</td><td>抗抵赖失败</td></tr>
+                    <tr><td>I (Information Disclosure)</td><td>信息泄露</td></tr>
+                    <tr><td>D (Denial of Service)</td><td>拒绝服务</td></tr>
+                    <tr><td>E (Elevation of Privilege)</td><td>权限提升</td></tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article id="a05">
+            <h2>A05 Security Misconfiguration（安全配置错误）</h2>
+            <h3>漏洞本质</h3>
+            <p>系统默认配置不安全。这是企业里极其高频的问题。因为很多系统上线时：“先跑起来再说”。</p>
+
+            <h3>常见错误</h3>
+            <ul>
+                <li><strong>默认密码：</strong>例如 admin/admin, root/123456。</li>
+                <li><strong>开启目录浏览：</strong>攻击者直接下载配置文件、备份文件、日志。</li>
+                <li><strong>Debug 模式开启：</strong>错误信息暴露 SQL、文件路径、堆栈、Token。</li>
+            </ul>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li>删除默认账号</li>
+                <li>关闭调试模式</li>
+                <li>最小权限原则</li>
+                <li>配置审计与自动化基线检查</li>
+            </ul>
+        </article>
+
+        <article id="a06">
+            <h2>A06 Vulnerable and Outdated Components（存在漏洞的组件）</h2>
+            <h3>漏洞本质</h3>
+            <p>你自己的代码可能没漏洞，但你依赖的组件有漏洞。现代系统大量依赖开源框架、第三方 SDK、Docker 镜像等。供应链攻击越来越危险。</p>
+
+            <h3>典型案例</h3>
+            <ul>
+                <li><strong>Log4Shell：</strong>Java 安全史上最著名漏洞之一。攻击者通过日志即可远程执行代码，影响全球。</li>
+                <li><strong>Fastjson AutoType：</strong>Java 常见高危反序列化漏洞。</li>
+            </ul>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>建立 SBOM (Software Bill of Materials)：</strong>知道系统用了哪些组件。</li>
+                <li><strong>自动化漏洞扫描：</strong>例如 Dependabot, Snyk, Trivy。</li>
+                <li><strong>及时升级：</strong>不要“等出事再升级”。</li>
+            </ul>
+        </article>
+
+        <article id="a07">
+            <h2>A07 Identification and Authentication Failures（身份认证失效）</h2>
+            <h3>漏洞本质</h3>
+            <p>系统无法正确确认：“你到底是谁”。</p>
+
+            <h3>常见问题</h3>
+            <ul>
+                <li><strong>弱密码：</strong>例如 123456, admin。</li>
+                <li><strong>Session 固定：</strong>攻击者提前设置 SessionID，用户登录后被接管。</li>
+                <li><strong>Token 永不过期：</strong>JWT 长期有效，泄露后永久可用。</li>
+            </ul>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>强密码策略：</strong>限制长度、复杂度，使用黑名单密码。</li>
+                <li><strong>MFA 多因素认证：</strong>推荐 TOTP、FIDO2、硬件密钥。</li>
+                <li><strong>登录限速：</strong>防止暴力破解。</li>
+            </ul>
+        </article>
+
+        <article id="a08">
+            <h2>A08 Software and Data Integrity Failures（完整性失效）</h2>
+            <h3>漏洞本质</h3>
+            <p>系统默认相信更新包、插件、CI/CD、第三方代码，但没有验证完整性。</p>
+
+            <h3>常见问题</h3>
+            <ul>
+                <li><strong>不安全反序列化：</strong>攻击者构造恶意对象，导致远程代码执行。</li>
+                <li><strong>CI/CD 被攻击：</strong>攻击者污染构建流程，发布恶意代码。</li>
+            </ul>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li>软件签名与校验 Hash</li>
+                <li>Zero Trust CI/CD</li>
+                <li>禁止反序列化不可信数据</li>
+            </ul>
+        </article>
+
+        <article id="a09">
+            <h2>A09 Logging and Monitoring Failures（日志与监控失效）</h2>
+            <h3>漏洞本质</h3>
+            <p>系统被攻击了，但你不知道。很多企业不是“没被攻击”，而是根本没发现。</p>
+
+            <h3>常见问题</h3>
+            <ul>
+                <li><strong>不记录关键日志：</strong>例如登录失败、权限变更、数据导出。</li>
+                <li><strong>无告警系统：</strong>即使日志异常也没人知道。</li>
+            </ul>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>建立 SIEM：</strong>例如 Splunk, ELK, Wazuh。</li>
+                <li><strong>建立攻击告警规则：</strong>例如短时间大量登录失败、异地登录告警。</li>
+            </ul>
+        </article>
+
+        <article id="a10">
+            <h2>A10 SSRF（服务端请求伪造）</h2>
+            <h3>漏洞本质</h3>
+            <p>攻击者让服务器替自己发请求。因为服务器通常权限更高，能访问内网或云元数据。攻击目标不是 Web 本身，而是内网。</p>
+
+            <h3>常见场景</h3>
+            <p><strong>云环境高危：</strong>攻击者访问 <code>169.254.169.254</code> 获取云主机元数据。可能直接获取 AK/SK、IAM Token、临时凭证。</p>
+
+            <h3>防御方案</h3>
+            <ul>
+                <li><strong>URL 白名单：</strong>不要允许任意 URL。</li>
+                <li><strong>禁止访问内网地址：</strong>过滤 127.0.0.1、localhost 及内网 IP。</li>
+                <li><strong>网络隔离：</strong>业务服务器不要直接访问核心内网。</li>
+            </ul>
+        </article>
+
+        <article id="conclusion">
+            <h2>真正危险的不是“漏洞”</h2>
+            <p>很多新人学安全只盯着漏洞名字，这是远远不够的。真正危险的是：<strong>系统性安全失败。</strong></p>
+            <ul>
+                <li>权限模型错误</li>
+                <li>安全边界不存在</li>
+                <li>DevOps 缺少安全</li>
+                <li>开发默认信任用户输入</li>
+            </ul>
+            <div class="highlight-box">
+                <p>漏洞只是结果，设计缺陷才是根源。</p>
+            </div>
+
+            <h3>企业安全建设建议</h3>
+            <ul>
+                <li><strong>第一阶段：建立最低安全基线。</strong>做到 HTTPS、MFA、权限控制、参数化查询、日志监控。</li>
+                <li><strong>第二阶段：安全左移。</strong>在开发阶段引入 SAST、DAST、威胁建模。</li>
+                <li><strong>第三阶段：零信任。</strong>默认不信任用户、网络、内部系统、第三方组件。</li>
+            </ul>
+            
+            <h3>学习建议</h3>
+            <p>不要只停留在背漏洞名字、用扫描器。你应该深入理解操作系统、网络协议、Web 架构、数据库、编译原理、权限模型。</p>
+            <p>因为：<strong>安全本质上是“系统理解能力”，不是工具熟练度。</strong></p>
+        </article>
+    </main>
 </div>
 
 <script>
-var now=new Date();
-document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+document.addEventListener('DOMContentLoaded', function() {
+    const articles = document.querySelectorAll('article');
+    const navLinks = document.querySelectorAll('.toc-link');
 
-if(""!=""){
-    var startSite=new Date("");
-    var diff=now.getTime()-startSite.getTime();
-    var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
-}
-</script></div>
+    // 监听滚动事件并计算当前在视口中的文章
+    const observerOptions = {
+        root: null,
+        rootMargin: '-20% 0px -60% 0px', // 触发线：距离顶部 20%
+        threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                
+                // 移除所有激活状态
+                navLinks.forEach(link => link.classList.remove('active'));
+                
+                // 给当前正在阅读的目录项添加激活状态
+                const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+        });
+    }, observerOptions);
+
+    articles.forEach(article => observer.observe(article));
+});
+</script>
+
 </body>
-<script>
-var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'search': 'M15.7 13.3l-3.81-3.83A5.93 5.93 0 0 0 13 6c0-3.31-2.69-6-6-6S1 2.69 1 6s2.69 6 6 6c1.3 0 2.48-.41 3.47-1.11l3.83 3.81c.19.2.45.3.7.3.25 0 .52-.09.7-.3a.996.996 0 0 0 0-1.41v.01zM7 10.7c-2.59 0-4.7-2.11-4.7-4.7 0-2.59 2.11-4.7 4.7-4.7 2.59 0 4.7 2.11 4.7 4.7 0 2.59-2.11 4.7-4.7 4.7z', 'rss': 'M2.002 2.725a.75.75 0 0 1 .797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 0 1-1.497.098 10.502 10.502 0 0 0-9.776-9.776.747.747 0 0 1-.7-.798ZM2.84 7.05h-.002a7.002 7.002 0 0 1 6.113 6.111.75.75 0 0 1-1.49.178 5.503 5.503 0 0 0-4.8-4.8.75.75 0 0 1 .179-1.489ZM2 13a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z', 'upload': 'M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z M11.78 4.72a.749.749 0 1 1-1.06 1.06L8.75 3.811V9.5a.75.75 0 0 1-1.5 0V3.811L5.28 5.78a.749.749 0 1 1-1.06-1.06l3.25-3.25a.749.749 0 0 1 1.06 0l3.25 3.25Z', 'post': 'M0 3.75C0 2.784.784 2 1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 14H1.75A1.75 1.75 0 0 1 0 12.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25ZM3.5 6.25a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1-.75-.75Zm.75 2.25h4a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1 0-1.5Z'};
-var utterancesLoad=0;
-
-let themeSettings={
-    "dark": ["dark","moon","#00f0ff","dark-blue"],
-    "light": ["light","sun","#ff5000","github-light"],
-    "auto": ["auto","sync","","preferred-color-scheme"]
-};
-function changeTheme(mode, icon, color, utheme){
-    document.documentElement.setAttribute("data-color-mode",mode);
-    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
-    document.getElementById("themeSwitch").parentNode.style.color=color;
-    if(utterancesLoad==1){utterancesTheme(utheme);}
-}
-function modeSwitch(){
-    let currentMode=document.documentElement.getAttribute('data-color-mode');
-    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
-    localStorage.setItem("meek_theme", newMode);
-    if(themeSettings[newMode]){
-        changeTheme(...themeSettings[newMode]);
-    }
-}
-function utterancesTheme(theme){
-    const message={type:'set-theme',theme: theme};
-    const iframe=document.getElementsByClassName('utterances-frame')[0];
-    iframe.contentWindow.postMessage(message,'https://utteranc.es');
-}
-if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
-console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
-</script>
-
-<script>
-document.getElementById("pathSearch").setAttribute("d",IconList["search"]);
-document.getElementById("pathRSS").setAttribute("d",IconList["rss"]);
-iconTOP=document.getElementsByClassName("svgTop1");
-iconPost=document.getElementsByClassName("svgTop0");
-for(var i=0;i<iconTOP.length;i++){
-    iconTOP[i].setAttribute("d",IconList["upload"]);
-    iconTOP[i].parentNode.style.color="red";
-}
-for(var i=0;i<iconPost.length;i++){
-    iconPost[i].setAttribute("d",IconList["post"]);
-}
-
-
-
-
-</script>
-
-
 </html>
